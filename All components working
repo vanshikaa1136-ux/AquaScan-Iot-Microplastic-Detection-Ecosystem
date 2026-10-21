@@ -1,0 +1,62 @@
+#define TURBIDITY_PIN 35
+#define TDS_PIN       34
+
+#define RED_LED       27
+#define GREEN_LED     26
+#define BUZZER_PIN    22
+
+// Example raw ADC thresholds; calibrate for your sensors.
+const int TURBIDITY_LIMIT = 2000;
+const int TDS_LIMIT = 2000;
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  analogReadResolution(12);  // ESP32 ADC: 0–4095
+
+  digitalWrite(RED_LED, LOW);
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  Serial.println("Water Quality Monitoring Started");
+  Serial.println("--------------------------------");
+}
+
+void loop() {
+  int turbidityRaw = analogRead(TURBIDITY_PIN);
+  int tdsRaw = analogRead(TDS_PIN);
+
+  Serial.println();
+  Serial.println("----- Water Readings -----");
+
+  Serial.print("Turbidity ADC: ");
+  Serial.println(turbidityRaw);
+
+  Serial.print("TDS ADC: ");
+  Serial.println(tdsRaw);
+
+  // These are provisional raw-value comparisons,
+  // not validated water-safety limits.
+  bool alert = (turbidityRaw > TURBIDITY_LIMIT) ||
+               (tdsRaw > TDS_LIMIT);
+
+  if (alert) {
+    digitalWrite(RED_LED, HIGH);
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(BUZZER_PIN, HIGH);
+
+    Serial.println("ALERT: Check sensor readings and water sample.");
+  } else {
+    digitalWrite(RED_LED, LOW);
+    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(BUZZER_PIN, LOW);
+
+    Serial.println("No threshold alert.");
+  }
+
+  delay(2000);
+}
